@@ -258,6 +258,57 @@ import TestCheck
             }
         }
     }
+    
+    public class func changes(changes: [[String : AnyObject]], inEntityNamed entityName: String, predicate: NSPredicate?, parent: NSManagedObject?, parentRelationship: NSRelationshipDescription?, inContext context: NSManagedObjectContext, dataStack: DATAStack, operations: DATAFilter.Operation, saveContext: Bool, completion: ((error: NSError?) -> Void)?) {
+        guard let entity = NSEntityDescription.entityForName(entityName, inManagedObjectContext: context) else { abort() }
+        
+        let localPrimaryKey = entity.sync_localPrimaryKey()
+        let remotePrimaryKey = entity.sync_remotePrimaryKey()
+        let shouldLookForParent = parent == nil && predicate == nil
+        
+        var finalPredicate = predicate
+        if let parentEntity = entity.sync_parentEntity() where shouldLookForParent {
+            finalPredicate = NSPredicate(format: "%K = nil", parentEntity.name)
+        }
+        
+        if localPrimaryKey.isEmpty {
+            fatalError("Local primary key not found for entity: \(entityName), add a primary key named id or mark an existing attribute using hyper.isPrimaryKey")
+        }
+        
+        if remotePrimaryKey.isEmpty {
+            fatalError("Remote primary key not found for entity: \(entityName), we were looking for id, if your remote ID has a different name consider using hyper.remoteKey to map to the right value")
+        }
+        
+        DATAFilter.changes(changes as [[String: AnyObject]], inEntityNamed: entityName, predicate: finalPredicate, operations: operations, localPrimaryKey: localPrimaryKey, remotePrimaryKey: remotePrimaryKey, context: context, inserted: { JSON in
+            
+            let created = NSEntityDescription.insertNewObjectForEntityForName(entityName, inManagedObjectContext: context)
+            created.sync_fillWithDictionary(JSON, parent: parent, parentRelationship: parentRelationship, dataStack: dataStack, operations: operations)
+        }) { JSON, updatedObject in
+            updatedObject.sync_fillWithDictionary(JSON, parent: parent, parentRelationship: parentRelationship, dataStack: dataStack, operations: operations)
+        }
+        
+        var syncError: NSError?
+        
+        if saveContext == true {
+            if context.hasChanges {
+                do {
+                    try context.save()
+                } catch let error as NSError {
+                    syncError = error
+                } catch {
+                    fatalError("Fatal error")
+                }
+            }
+        }
+    
+        if TestCheck.isTesting {
+            completion?(error: syncError)
+        } else {
+            dispatch_async(dispatch_get_main_queue()) {
+                completion?(error: syncError)
+            }
+        }
+    }
 
     func changes(changes: [[String : AnyObject]], inEntityNamed entityName: String, predicate: NSPredicate?, parent: NSManagedObject?, parentRelationship: NSRelationshipDescription?, inContext context: NSManagedObjectContext, dataStack: DATAStack, operations: DATAFilter.Operation, completion: ((error: NSError?) -> Void)?) {
         guard let entity = NSEntityDescription.entityForName(entityName, inManagedObjectContext: context) else { abort() }
@@ -300,57 +351,6 @@ import TestCheck
                     syncError = error
                 } catch {
                     fatalError("Fatal error")
-                }
-            }
-        }
-        
-        completion?(error: syncError)
-    }
-    
-    func changes(changes: [[String : AnyObject]], inEntityNamed entityName: String, predicate: NSPredicate?, parent: NSManagedObject?, parentRelationship: NSRelationshipDescription?, inContext context: NSManagedObjectContext, dataStack: DATAStack, operations: DATAFilter.Operation, saveContext: Bool, completion: ((error: NSError?) -> Void)?) {
-        guard let entity = NSEntityDescription.entityForName(entityName, inManagedObjectContext: context) else { abort() }
-        
-        let localPrimaryKey = entity.sync_localPrimaryKey()
-        let remotePrimaryKey = entity.sync_remotePrimaryKey()
-        let shouldLookForParent = parent == nil && predicate == nil
-        
-        var finalPredicate = predicate
-        if let parentEntity = entity.sync_parentEntity() where shouldLookForParent {
-            finalPredicate = NSPredicate(format: "%K = nil", parentEntity.name)
-        }
-        
-        if localPrimaryKey.isEmpty {
-            fatalError("Local primary key not found for entity: \(entityName), add a primary key named id or mark an existing attribute using hyper.isPrimaryKey")
-        }
-        
-        if remotePrimaryKey.isEmpty {
-            fatalError("Remote primary key not found for entity: \(entityName), we were looking for id, if your remote ID has a different name consider using hyper.remoteKey to map to the right value")
-        }
-        
-        DATAFilter.changes(changes as [[String : AnyObject]], inEntityNamed: entityName, predicate: finalPredicate, operations: operations, localPrimaryKey: localPrimaryKey, remotePrimaryKey: remotePrimaryKey, context: context, inserted: { JSON in
-            guard self.cancelled == false else { return }
-            
-            let created = NSEntityDescription.insertNewObjectForEntityForName(entityName, inManagedObjectContext: context)
-            created.sync_fillWithDictionary(JSON, parent: parent, parentRelationship: parentRelationship, dataStack: dataStack, operations: operations)
-        }) { JSON, updatedObject in
-            guard self.cancelled == false else { return }
-            updatedObject.sync_fillWithDictionary(JSON, parent: parent, parentRelationship: parentRelationship, dataStack: dataStack, operations: operations)
-        }
-        
-        var syncError: NSError?
-        
-        if saveContext == true {
-            if context.hasChanges {
-                if self.cancelled {
-                    context.reset()
-                } else {
-                    do {
-                        try context.save()
-                    } catch let error as NSError {
-                        syncError = error
-                    } catch {
-                        fatalError("Fatal error")
-                    }
                 }
             }
         }
