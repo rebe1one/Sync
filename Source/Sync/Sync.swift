@@ -125,7 +125,7 @@ public protocol SyncDelegate: class {
         updateCancelled(true)
     }
 
-    class func changes(_ changes: [[String: Any]], inEntityNamed entityName: String, predicate: NSPredicate?, parent: NSManagedObject?, parentRelationship: NSRelationshipDescription?, inContext context: NSManagedObjectContext, operations: Sync.OperationOptions, shouldContinueBlock: (() -> Bool)?, objectJSONBlock: ((_ objectJSON: [String: Any]) -> [String: Any])?) throws {
+    class func changes(_ changes: [[String: Any]], inEntityNamed entityName: String, predicate: NSPredicate?, parent: NSManagedObject?, parentRelationship: NSRelationshipDescription?, inContext context: NSManagedObjectContext, operations: Sync.OperationOptions, saveContext: Bool = true, shouldContinueBlock: (() -> Bool)?, objectJSONBlock: ((_ objectJSON: [String: Any]) -> [String: Any])?) throws {
         guard let entity = NSEntityDescription.entity(forEntityName: entityName, in: context) else { fatalError("Entity named \(entityName) not found.") }
 
         let localPrimaryKey = entity.sync_localPrimaryKey()
@@ -160,7 +160,7 @@ public protocol SyncDelegate: class {
             updatedObject.sync_fill(with: JSON, parent: parent, parentRelationship: parentRelationship, context: context, operations: operations, shouldContinueBlock: shouldContinueBlock, objectJSONBlock: objectJSONBlock)
         }
 
-        if context.hasChanges {
+        if saveContext && context.hasChanges {
             let shouldContinue = shouldContinueBlock?() ?? true
             if shouldContinue {
                 try context.save()
