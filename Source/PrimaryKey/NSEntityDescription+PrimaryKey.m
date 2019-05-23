@@ -47,4 +47,20 @@
     return remoteKey;
 }
 
+- (NSAttributeDescription *)sync_updatedTimestampAttribute {
+    __block NSAttributeDescription *updatedTimestampAttribute;
+    
+    [self.propertiesByName enumerateKeysAndObjectsUsingBlock:^(NSString *key,
+                                                               NSAttributeDescription *attributeDescription,
+                                                               BOOL *stop) {
+        if (attributeDescription.isUpdatedTimestamp) {
+            updatedTimestampAttribute = attributeDescription;
+            *stop = YES;
+        }
+        
+    }];
+    
+    return updatedTimestampAttribute;
+}
+
 @end

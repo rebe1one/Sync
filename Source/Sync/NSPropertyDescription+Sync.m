@@ -17,6 +17,10 @@ static NSString * const PropertyMapperCompatibilityNonExportableKey = @"hyper.no
 static NSString * const PropertyMapperCustomValueTransformerKey = @"sync.valueTransformer";
 static NSString * const PropertyMapperCompatibilityCustomValueTransformerKey = @"hyper.valueTransformer";
 
+static NSString * const SyncCustomUpdatedTimestamp = @"sync.updatedTimestamp";
+static NSString * const SyncCustomUpdatedTimestampValue = @"YES";
+static NSString * const SyncCustomUpdatedTimestampAlternativeValue = @"true";
+
 @implementation NSPropertyDescription (Sync)
 
 - (BOOL)isCustomPrimaryKey {
@@ -58,6 +62,15 @@ static NSString * const PropertyMapperCompatibilityCustomValueTransformerKey = @
     }
 
     return keyName;
+}
+
+- (BOOL)isUpdatedTimestamp {
+    NSString *keyName = self.userInfo[SyncCustomUpdatedTimestamp];
+    
+    BOOL hasCustomUpdatedTimestamp = (keyName &&
+                                      ([keyName isEqualToString:SyncCustomUpdatedTimestampValue] || [keyName isEqualToString:SyncCustomUpdatedTimestampAlternativeValue]) );
+    
+    return hasCustomUpdatedTimestamp;
 }
 
 @end

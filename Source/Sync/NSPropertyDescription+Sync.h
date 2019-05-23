@@ -10,4 +10,6 @@
 
 @property (nonatomic, nullable, readonly) NSString *customTransformerName;
 
+@property (readonly) BOOL isUpdatedTimestamp;
+
 @end

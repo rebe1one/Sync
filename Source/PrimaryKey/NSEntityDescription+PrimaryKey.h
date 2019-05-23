@@ -31,6 +31,14 @@ static NSString * const SyncDefaultRemotePrimaryKey = @"id";
  */
 - (NSString *)sync_remotePrimaryKey;
 
+/**
+ Returns the Core Data attribute used as the updated timestamp, or nil if none is specified.
+ You can mark any attribute as the updated timestamp by adding `sync.updatedTimestamp` and the value `YES` or `true` to the Core Data model userInfo.
+ 
+ @return The attribute description that represents the updated timestamp.
+ */
+- (nullable NSAttributeDescription *)sync_updatedTimestampAttribute;
+
 @end
 
 NS_ASSUME_NONNULL_END

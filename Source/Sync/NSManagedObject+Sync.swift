@@ -29,6 +29,16 @@ extension NSManagedObject {
      - parameter dataStack: The DataStack instance.
      */
     func sync_fill(with dictionary: [String: Any], parent: NSManagedObject?, parentRelationship: NSRelationshipDescription?, context: NSManagedObjectContext, operations: Sync.OperationOptions, shouldContinueBlock: (() -> Bool)?, objectJSONBlock: ((_ objectJSON: [String: Any]) -> [String: Any])?) {
+        
+        if let updatedTimestampAttribute = entity.sync_updatedTimestampAttribute(),
+            let oldValue = self.value(forKey: updatedTimestampAttribute.name) as? Date,
+            let dictionaryValue = dictionary[updatedTimestampAttribute.name],
+            let newValue = value(forAttributeDescription: updatedTimestampAttribute, usingRemoteValue: dictionaryValue) as? Date,
+            newValue.compare(oldValue) == .orderedAscending {
+            NSLog("Local object is newer, skipping update")
+            return
+        }
+        
         hyp_fill(with: dictionary)
 
         for relationship in entity.sync_relationships() {
