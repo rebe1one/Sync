@@ -318,7 +318,7 @@ extension NSManagedObject {
 
             if let entity = NSEntityDescription.entity(forEntityName: childEntityName, in: context) {
                 if manyToMany {
-                    childPredicate = NSPredicate(format: "ANY %K IN %@", entity.sync_localPrimaryKey(), childrenIDs)
+                    childPredicate = NSPredicate(format: "%K IN %@", entity.sync_localPrimaryKey(), childrenIDs)
                 } else {
                     guard let inverseEntityName = relationship.inverseRelationship?.name else { fatalError() }
                     let primaryKeyAttribute = entity.sync_primaryKeyAttribute()
@@ -327,7 +327,7 @@ extension NSManagedObject {
                     // is of type Date, then we need to convert the array of strings in the JSON to be an array of dates.
                     // More info: https://github.com/3lvis/Sync/pull/477
                     let ids = childrenIDs.compactMap { value(forAttributeDescription: primaryKeyAttribute, usingRemoteValue: $0) }
-                    childPredicate = NSPredicate(format: "ANY %K IN %@ OR %K = %@", entity.sync_localPrimaryKey(), ids, inverseEntityName, self)
+                    childPredicate = NSPredicate(format: "%K IN %@ OR %K = %@", entity.sync_localPrimaryKey(), ids, inverseEntityName, self)
                 }
             }
 
