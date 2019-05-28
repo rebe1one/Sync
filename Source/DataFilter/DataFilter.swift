@@ -67,10 +67,17 @@ class DataFilter: NSObject {
             insertedObjectIDs = insertedObjectIDs.filter { value in
                 !localPrimaryKeys.contains { $0.isEqual(value) }
             }
+            
+            let globalPrimaryKeysAndObjectIDs = context.managedObjectIDs(in: entityName, usingAsKey: localPrimaryKey, predicate: nil) as [NSObject: NSManagedObjectID]
 
             for fetchedID in insertedObjectIDs {
                 let objectDictionary = remotePrimaryKeysAndChanges[fetchedID]!
-                inserted(objectDictionary)
+                if let existingObjectID = globalPrimaryKeysAndObjectIDs[fetchedID] {
+                    let object = context.object(with: existingObjectID)
+                    updated(objectDictionary, object)
+                } else {
+                    inserted(objectDictionary)
+                }
             }
         }
 
