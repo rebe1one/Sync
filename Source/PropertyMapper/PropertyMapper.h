@@ -47,6 +47,14 @@ typedef NS_ENUM(NSInteger, SyncPropertyMapperInflectionType) {
 - (void)hyp_fillWithDictionary:(NSDictionary<NSString *, id> *)dictionary;
 
 /**
+ Replaces the @c NSManagedObject with the contents of the dictionary using a convention-over-configuration paradigm mapping the Core Data attributes to their conterparts in JSON using snake_case.
+ Empty values will be removed from the @c NSManagedObject
+
+ @param dictionary The JSON dictionary to be used to fill the values of your @c NSManagedObject.
+ */
+- (void)hyp_replaceWithDictionary:(NSDictionary<NSString *, id> *)dictionary;
+
+/**
  Fills the @c NSManagedObject with the contents of the dictionary using a convention-over-configuration paradigm mapping the Core Data attributes to their conterparts in JSON using snake_case.
 
  @param dictionary The JSON dictionary to be used to fill the values of your @c NSManagedObject.
