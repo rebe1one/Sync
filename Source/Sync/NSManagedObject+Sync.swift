@@ -39,7 +39,11 @@ extension NSManagedObject {
             return
         }
         
-        hyp_fill(with: dictionary)
+        if entity.isAlwaysCompleteObject {
+            hyp_replace(with: dictionary)
+        } else {
+            hyp_fill(with: dictionary)
+        }
 
         for relationship in entity.sync_relationships() {
             let suffix = relationship.isToMany ? "_ids" : "_id"
